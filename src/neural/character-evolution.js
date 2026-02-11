@@ -3,7 +3,7 @@
  * Learns character personality shifts and emotional arcs from chat history.
  */
 
-import { LSTMNetwork, normalizeVector, cosineSimilarity, padSequence } from './rnn-core.js';
+import { LSTMNetwork, normalizeVector, cosineSimilarity } from './rnn-core.js';
 import { getPipeline } from '../transformers.js';
 
 /**

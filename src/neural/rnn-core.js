@@ -3,7 +3,7 @@
  * Provides adaptive world building and character evolution capabilities.
  */
 
-import { getNeuralModelConfig, TRAINING_CONFIG } from './rnn-config.js';
+import { getNeuralModelConfig } from './rnn-config.js';
 
 /**
  * Simple LSTM cell implementation for JavaScript
@@ -17,7 +17,7 @@ class LSTMCell {
     constructor(inputSize, hiddenSize) {
         this.inputSize = inputSize;
         this.hiddenSize = hiddenSize;
-        
+
         // Initialize weights (in production, these would be loaded from trained models)
         this.weights = this._initializeWeights();
     }
@@ -32,23 +32,23 @@ class LSTMCell {
             Wii: this._randomMatrix(this.hiddenSize, this.inputSize),
             Whi: this._randomMatrix(this.hiddenSize, this.hiddenSize),
             bi: this._randomVector(this.hiddenSize),
-            
+
             // Forget gate
             Wif: this._randomMatrix(this.hiddenSize, this.inputSize),
             Whf: this._randomMatrix(this.hiddenSize, this.hiddenSize),
             bf: this._randomVector(this.hiddenSize),
-            
+
             // Cell gate
             Wig: this._randomMatrix(this.hiddenSize, this.inputSize),
             Whg: this._randomMatrix(this.hiddenSize, this.hiddenSize),
             bg: this._randomVector(this.hiddenSize),
-            
+
             // Output gate
             Wio: this._randomMatrix(this.hiddenSize, this.inputSize),
             Who: this._randomMatrix(this.hiddenSize, this.hiddenSize),
             bo: this._randomVector(this.hiddenSize),
         };
-        
+
         return weights;
     }
 
@@ -58,8 +58,8 @@ class LSTMCell {
      */
     _randomMatrix(rows, cols) {
         const scale = Math.sqrt(2.0 / (rows + cols));
-        return Array(rows).fill(0).map(() => 
-            Array(cols).fill(0).map(() => (Math.random() - 0.5) * 2 * scale)
+        return Array(rows).fill(0).map(() =>
+            Array(cols).fill(0).map(() => (Math.random() - 0.5) * 2 * scale),
         );
     }
 
@@ -92,8 +92,8 @@ class LSTMCell {
      * @private
      */
     _matVecMul(matrix, vector) {
-        return matrix.map(row => 
-            row.reduce((sum, val, i) => sum + val * vector[i], 0)
+        return matrix.map(row =>
+            row.reduce((sum, val, i) => sum + val * vector[i], 0),
         );
     }
 
@@ -122,29 +122,29 @@ class LSTMCell {
      */
     forward(input, h, c) {
         const { Wii, Whi, bi, Wif, Whf, bf, Wig, Whg, bg, Wio, Who, bo } = this.weights;
-        
+
         // Input gate
         let i_t = this._vecAdd(this._matVecMul(Wii, input), this._matVecMul(Whi, h));
         i_t = this._vecAdd(i_t, bi).map(x => this._sigmoid(x));
-        
+
         // Forget gate
         let f_t = this._vecAdd(this._matVecMul(Wif, input), this._matVecMul(Whf, h));
         f_t = this._vecAdd(f_t, bf).map(x => this._sigmoid(x));
-        
+
         // Cell gate
         let g_t = this._vecAdd(this._matVecMul(Wig, input), this._matVecMul(Whg, h));
         g_t = this._vecAdd(g_t, bg).map(x => this._tanh(x));
-        
+
         // Output gate
         let o_t = this._vecAdd(this._matVecMul(Wio, input), this._matVecMul(Who, h));
         o_t = this._vecAdd(o_t, bo).map(x => this._sigmoid(x));
-        
+
         // New cell state
         const c_new = this._vecAdd(this._vecMul(f_t, c), this._vecMul(i_t, g_t));
-        
+
         // New hidden state
         const h_new = this._vecMul(o_t, c_new.map(x => this._tanh(x)));
-        
+
         return { h: h_new, c: c_new };
     }
 }
@@ -159,17 +159,17 @@ export class LSTMNetwork {
     constructor(modelType) {
         this.config = getNeuralModelConfig(modelType);
         this.modelType = modelType;
-        
+
         // Create LSTM layers
         this.layers = [];
         for (let i = 0; i < this.config.numLayers; i++) {
             const inputSize = i === 0 ? this.config.inputSize : this.config.hiddenSize;
             this.layers.push(new LSTMCell(inputSize, this.config.hiddenSize));
         }
-        
+
         // Output projection layer
         this.outputWeights = this._initializeOutputWeights();
-        
+
         // Initialize states
         this.resetStates();
     }
@@ -181,7 +181,7 @@ export class LSTMNetwork {
     _initializeOutputWeights() {
         const scale = Math.sqrt(2.0 / (this.config.hiddenSize + this.config.outputSize));
         return Array(this.config.outputSize).fill(0).map(() =>
-            Array(this.config.hiddenSize).fill(0).map(() => (Math.random() - 0.5) * 2 * scale)
+            Array(this.config.hiddenSize).fill(0).map(() => (Math.random() - 0.5) * 2 * scale),
         );
     }
 
@@ -189,11 +189,11 @@ export class LSTMNetwork {
      * Reset hidden and cell states to zero
      */
     resetStates() {
-        this.hiddenStates = this.layers.map(() => 
-            Array(this.config.hiddenSize).fill(0)
+        this.hiddenStates = this.layers.map(() =>
+            Array(this.config.hiddenSize).fill(0),
         );
-        this.cellStates = this.layers.map(() => 
-            Array(this.config.hiddenSize).fill(0)
+        this.cellStates = this.layers.map(() =>
+            Array(this.config.hiddenSize).fill(0),
         );
     }
 
@@ -204,25 +204,25 @@ export class LSTMNetwork {
      */
     forward(input) {
         let layerInput = input;
-        
+
         // Pass through each LSTM layer
         for (let i = 0; i < this.layers.length; i++) {
             const { h, c } = this.layers[i].forward(
                 layerInput,
                 this.hiddenStates[i],
-                this.cellStates[i]
+                this.cellStates[i],
             );
-            
+
             this.hiddenStates[i] = h;
             this.cellStates[i] = c;
             layerInput = h;
         }
-        
+
         // Project to output size
         const output = this.outputWeights.map(row =>
-            row.reduce((sum, val, i) => sum + val * this.hiddenStates[this.layers.length - 1][i], 0)
+            row.reduce((sum, val, i) => sum + val * this.hiddenStates[this.layers.length - 1][i], 0),
         );
-        
+
         return output;
     }
 
@@ -275,7 +275,7 @@ export function normalizeVector(vector) {
     const mean = vector.reduce((sum, val) => sum + val, 0) / vector.length;
     const variance = vector.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / vector.length;
     const std = Math.sqrt(variance + 1e-8); // Add epsilon for numerical stability
-    
+
     return vector.map(val => (val - mean) / std);
 }
 
@@ -289,11 +289,11 @@ export function cosineSimilarity(a, b) {
     if (a.length !== b.length) {
         throw new Error('Vectors must have the same length');
     }
-    
+
     const dotProduct = a.reduce((sum, val, i) => sum + val * b[i], 0);
     const magnitudeA = Math.sqrt(a.reduce((sum, val) => sum + val * val, 0));
     const magnitudeB = Math.sqrt(b.reduce((sum, val) => sum + val * val, 0));
-    
+
     return dotProduct / (magnitudeA * magnitudeB + 1e-8);
 }
 
@@ -308,15 +308,15 @@ export function padSequence(sequence, targetLength, vectorSize) {
     if (sequence.length === targetLength) {
         return sequence;
     }
-    
+
     if (sequence.length > targetLength) {
         // Take the most recent items
         return sequence.slice(-targetLength);
     }
-    
+
     // Pad with zero vectors at the beginning
-    const padding = Array(targetLength - sequence.length).fill(0).map(() => 
-        Array(vectorSize).fill(0)
+    const padding = Array(targetLength - sequence.length).fill(0).map(() =>
+        Array(vectorSize).fill(0),
     );
     return [...padding, ...sequence];
 }

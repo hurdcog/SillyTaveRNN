@@ -3,7 +3,7 @@
  * Tracks dynamic world state updates and entity relationships.
  */
 
-import { LSTMNetwork, normalizeVector, cosineSimilarity, padSequence } from './rnn-core.js';
+import { LSTMNetwork, normalizeVector, cosineSimilarity } from './rnn-core.js';
 import { getPipeline } from '../transformers.js';
 
 /**
@@ -127,7 +127,7 @@ export class WorldStateEvolutionTracker {
                     }
                     entityData.relatedEntities.set(
                         otherEntity,
-                        entityData.relatedEntities.get(otherEntity) + 1
+                        entityData.relatedEntities.get(otherEntity) + 1,
                     );
                 }
             }
@@ -159,7 +159,7 @@ export class WorldStateEvolutionTracker {
         for (let i = 1; i < Math.min(10, history.length); i++) {
             const similarity = cosineSimilarity(
                 history[history.length - i - 1].embedding,
-                history[history.length - i].embedding
+                history[history.length - i].embedding,
             );
             coherenceSum += similarity;
         }

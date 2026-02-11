@@ -3,6 +3,18 @@
  * and character development.
  */
 
+import { getConfigValue } from '../util.js';
+
+/**
+ * Gets a config value with neural-specific path
+ * @param {string} key - Config key
+ * @param {*} defaultValue - Default value if not found
+ * @returns {*} Config value
+ */
+function getNeuralConfig(key, defaultValue) {
+    return getConfigValue(`extensions.neural.${key}`, defaultValue);
+}
+
 /**
  * Model configurations for different neural network tasks
  */
@@ -14,7 +26,7 @@ export const NEURAL_MODEL_CONFIGS = {
         inputSize: 384, // Matches common embedding dimensions
         outputSize: 384,
         sequenceLength: 50, // Number of messages to consider
-        enabled: true,
+        enabled: getNeuralConfig('characterEvolution.enabled', true),
     },
     'world-state-evolution': {
         description: 'Sequence-to-sequence model for dynamic world state updates',
@@ -23,7 +35,7 @@ export const NEURAL_MODEL_CONFIGS = {
         inputSize: 384,
         outputSize: 384,
         sequenceLength: 100,
-        enabled: true,
+        enabled: getNeuralConfig('worldEvolution.enabled', true),
     },
     'context-relevance': {
         description: 'RNN for predicting context entry relevance given message history',
@@ -32,7 +44,7 @@ export const NEURAL_MODEL_CONFIGS = {
         inputSize: 384,
         outputSize: 1, // Relevance score
         sequenceLength: 20,
-        enabled: true,
+        enabled: getNeuralConfig('contextRelevance.enabled', true),
     },
     'narrative-flow': {
         description: 'LSTM for maintaining narrative coherence and story progression',
@@ -41,7 +53,7 @@ export const NEURAL_MODEL_CONFIGS = {
         inputSize: 384,
         outputSize: 384,
         sequenceLength: 30,
-        enabled: true,
+        enabled: getNeuralConfig('narrativeFlow.enabled', true),
     },
 };
 
@@ -82,8 +94,8 @@ export const TRAINING_CONFIG = {
  * State management for neural models
  */
 export const STATE_CONFIG = {
-    maxHistoryLength: 1000, // Maximum number of interactions to keep in history
-    stateSaveInterval: 100, // Save state every N interactions
+    maxHistoryLength: getNeuralConfig('characterEvolution.maxHistoryLength', 1000),
+    stateSaveInterval: getNeuralConfig('characterEvolution.stateSaveInterval', 100),
     stateCompressionEnabled: true,
 };
 

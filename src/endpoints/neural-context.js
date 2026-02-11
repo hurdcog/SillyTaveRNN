@@ -56,7 +56,7 @@ router.post('/character/process', async (request, response) => {
         const result = await characterTracker.processInteraction(
             characterId,
             message,
-            metadata || {}
+            metadata || {},
         );
 
         return response.json(result);
@@ -190,7 +190,7 @@ router.post('/world/process', async (request, response) => {
         const result = await worldTracker.processWorldEvent(
             worldId,
             event,
-            metadata || {}
+            metadata || {},
         );
 
         return response.json(result);
