@@ -12,11 +12,17 @@ import { getConfigValue } from '../util.js';
  * @returns {*} Config value
  */
 function getNeuralConfig(key, defaultValue) {
-    return getConfigValue(`extensions.neural.${key}`, defaultValue);
+    try {
+        return getConfigValue(`extensions.neural.${key}`, defaultValue);
+    } catch {
+        // Return default value if config is not available (e.g., during tests)
+        return defaultValue;
+    }
 }
 
 /**
  * Model configurations for different neural network tasks
+ * Note: Uses getters to delay config loading until needed
  */
 export const NEURAL_MODEL_CONFIGS = {
     'character-evolution': {
@@ -26,7 +32,9 @@ export const NEURAL_MODEL_CONFIGS = {
         inputSize: 384, // Matches common embedding dimensions
         outputSize: 384,
         sequenceLength: 50, // Number of messages to consider
-        enabled: getNeuralConfig('characterEvolution.enabled', true),
+        get enabled() {
+            return getNeuralConfig('characterEvolution.enabled', true);
+        },
     },
     'world-state-evolution': {
         description: 'Sequence-to-sequence model for dynamic world state updates',
@@ -35,7 +43,9 @@ export const NEURAL_MODEL_CONFIGS = {
         inputSize: 384,
         outputSize: 384,
         sequenceLength: 100,
-        enabled: getNeuralConfig('worldEvolution.enabled', true),
+        get enabled() {
+            return getNeuralConfig('worldEvolution.enabled', true);
+        },
     },
     'context-relevance': {
         description: 'RNN for predicting context entry relevance given message history',
@@ -44,7 +54,9 @@ export const NEURAL_MODEL_CONFIGS = {
         inputSize: 384,
         outputSize: 1, // Relevance score
         sequenceLength: 20,
-        enabled: getNeuralConfig('contextRelevance.enabled', true),
+        get enabled() {
+            return getNeuralConfig('contextRelevance.enabled', true);
+        },
     },
     'narrative-flow': {
         description: 'LSTM for maintaining narrative coherence and story progression',
@@ -53,7 +65,9 @@ export const NEURAL_MODEL_CONFIGS = {
         inputSize: 384,
         outputSize: 384,
         sequenceLength: 30,
-        enabled: getNeuralConfig('narrativeFlow.enabled', true),
+        get enabled() {
+            return getNeuralConfig('narrativeFlow.enabled', true);
+        },
     },
 };
 
@@ -92,10 +106,15 @@ export const TRAINING_CONFIG = {
 
 /**
  * State management for neural models
+ * Note: Uses default values if config is not available
  */
 export const STATE_CONFIG = {
-    maxHistoryLength: getNeuralConfig('characterEvolution.maxHistoryLength', 1000),
-    stateSaveInterval: getNeuralConfig('characterEvolution.stateSaveInterval', 100),
+    get maxHistoryLength() {
+        return getNeuralConfig('characterEvolution.maxHistoryLength', 1000);
+    },
+    get stateSaveInterval() {
+        return getNeuralConfig('characterEvolution.stateSaveInterval', 100);
+    },
     stateCompressionEnabled: true,
 };
 
